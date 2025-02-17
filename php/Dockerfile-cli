@@ -1,0 +1,13 @@
+FROM php:8.4-cli
+
+RUN apt-get update && apt-get install -y cron
+
+# Add the crontab file
+COPY ./php/cronjob/crontab /etc/cron.d/cronjob
+RUN chmod 0644 /etc/cron.d/cronjob
+
+# Apply the crontab
+RUN crontab /etc/cron.d/cronjob
+
+# Start cron and keep container running
+CMD ["cron", "-f"]

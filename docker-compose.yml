@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  php1: &php
+    build:
+      context: .
+      dockerfile: ./php/Dockerfile
+    container_name: php_fpm_1
+    volumes:
+      - ./www:/var/www/html
+      - ./php/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
+      - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+
+  php2:
+    <<: *php
+    container_name: php_fpm_2
+
+  web1: &apache
+    build:
+      context: .
+      dockerfile: ./apache2/Dockerfile
+    container_name: apache_1
+    volumes:
+      - ./apache2/apache-config.conf:/etc/apache2/sites-available/000-default.conf:ro
+      - ./www:/var/www/html
+    depends_on:
+      - php1
+
+  web2:
+    <<: *apache
+    container_name: apache_2
+    volumes:
+      - ./apache2/apache-config2.conf:/etc/apache2/sites-available/000-default.conf:ro
+      - ./www:/var/www/html
+    depends_on:
+      - php2
+
+  load_balancer:
+    image: haproxy:latest
+    container_name: haproxy_lb
+    ports:
+      - "80:80"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - web1
+      - web2
+
+  php_cli:
+    build:
+      context: .
+      dockerfile: ./php/Dockerfile-cli
+    container_name: php_cli
+    volumes:
+      - ./www:/var/www/html
+    entrypoint: [ "cron", "-f" ]
