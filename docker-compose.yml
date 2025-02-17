@@ -10,6 +10,11 @@ services:
       - ./www:/var/www/html
       - ./php/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
       - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    networks:
+      - app-network
+      - session-network
+    environment:
+      - REDIS_HOST=redis
 
   php2:
     <<: *php
@@ -25,15 +30,20 @@ services:
       - ./www:/var/www/html
     depends_on:
       - php1
+    networks:
+      - app-network
+      - system-network
+    environment:
+      APACHEPHP: "php_fpm_1"
 
   web2:
     <<: *apache
     container_name: apache_2
-    volumes:
-      - ./apache2/apache-config2.conf:/etc/apache2/sites-available/000-default.conf:ro
-      - ./www:/var/www/html
     depends_on:
       - php2
+    environment:
+      APACHEPHP: "php_fpm_2"
+
 
   load_balancer:
     image: haproxy:latest
@@ -45,6 +55,9 @@ services:
     depends_on:
       - web1
       - web2
+    networks:
+      - system-network
+
 
   php_cli:
     build:
@@ -54,3 +67,65 @@ services:
     volumes:
       - ./www:/var/www/html
     entrypoint: [ "cron", "-f" ]
+
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - sql_data:/var/lib/mysql
+
+    networks:
+      - app-network
+
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g # Adjust heap size as needed
+      - Des.max-open-files=true
+    ports:
+      - "9200:9200" # Elasticsearch HTTP port
+      - "9300:9300" # Elasticsearch transport port
+    volumes:
+      - ./data:/usr/share/elasticsearch/data # Mount local directory to store data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          memory: 5g # Memory limit for the container
+
+  redis:
+    image: redis:latest
+    container_name: redis_session
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - session-network
+
+networks:
+  app-network:
+    driver: bridge
+  system-network:
+    driver: bridge
+
+  session-network:
+    driver: bridge
+
+volumes:
+  sql_data:
