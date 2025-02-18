@@ -104,4 +104,4 @@ This repository contains a project setup using PHP and Apache in a load-balanced
 - Refer to the official Docker documentation for more details on how to use Docker and Docker Compose.
 ```
 
-Would you like to proceed with this update?
+
