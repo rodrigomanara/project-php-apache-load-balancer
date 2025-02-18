@@ -41,22 +41,3 @@ try {
 } catch (Exception $e) {
     die($e->getMessage());
 }
-
-use Elastic\Elasticsearch\ClientBuilder;
-
-try {
-    $client = ClientBuilder::create()
-        ->setHosts(['elasticsearch'])
-        //->setApiKey('<api-key>')
-        ->build();
-
-    $client->ping();
-
-    echo   "<br/> ✅ Connected to Elastic Search successfully!";
-} catch (\Elastic\Elasticsearch\Exception\AuthenticationException $e) {
-    die("❌ Connection failed: " . $e->getMessage());
-} catch (\Elastic\Elasticsearch\Exception\ClientResponseException $e) {
-    die("❌ Connection failed: " . $e->getMessage());
-} catch (\Elastic\Elasticsearch\Exception\ServerResponseException $e) {
-    die("❌ Connection failed: " . $e->getMessage());
-}
