@@ -1,0 +1,11 @@
+{
+    "require": {
+        "predis/predis": "^2.3",
+        "elasticsearch/elasticsearch": "^8.17"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}
