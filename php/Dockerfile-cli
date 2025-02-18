@@ -1,7 +1,8 @@
 FROM php:8.4-cli
 
-RUN apt-get update && apt-get install -y cron
-RUN docker-php-ext-install pdo_pgsql
+RUN apt-get update && apt-get install -y cron \
+    libpq-dev \
+    && docker-php-ext-install pdo_pgsql
 
 # Add the crontab file
 COPY ./php/cronjob/crontab /etc/cron.d/cronjob

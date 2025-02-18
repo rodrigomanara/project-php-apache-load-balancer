@@ -9,12 +9,15 @@ services:
     volumes:
       - ./www:/var/www/html
       - ./php/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
-      - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+      - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
     networks:
       - app-network
       - session-network
     environment:
       - REDIS_HOST=redis
+    depends_on:
+      - db
+      - redis
 
   php2:
     <<: *php
@@ -58,7 +61,6 @@ services:
     networks:
       - system-network
 
-
   php_cli:
     build:
       context: .
@@ -68,11 +70,11 @@ services:
       - ./www:/var/www/html
     entrypoint: [ "cron", "-f" ]
 
-
   db:
+    container_name: "database"
     image: mysql:8.0
     environment:
-      MYSQL_DATABASE: 'db'
+      MYSQL_DATABASE: 'app'
       MYSQL_USER: 'user'
       MYSQL_PASSWORD: 'password'
       MYSQL_ROOT_PASSWORD: 'password'
@@ -81,8 +83,7 @@ services:
     expose:
       - '3306'
     volumes:
-      - sql_data:/var/lib/mysql
-
+      - ./mysql:/var/lib/mysql
     networks:
       - app-network
 
