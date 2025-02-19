@@ -1,8 +1,3 @@
-### Current README Content
-```markdown
-# project-php-apache-load-balancer
-```
-
 ## About
 
 This repository contains a project setup using PHP and Apache in a load-balanced environment.
